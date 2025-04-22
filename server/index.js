@@ -53,6 +53,20 @@ const memberSchema = new mongoose.Schema({
 
 const Member = mongoose.model('Member', memberSchema);
 
+// Performance Schema
+const performanceSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  date: { type: String, required: true },
+  venue: { type: String, required: true },
+  city: { type: String, required: true },
+  image: { type: String, required: true },
+  description: { type: String, required: true },
+  ticketLink: { type: String, default: '' },
+  active: { type: Boolean, default: true }
+}, { timestamps: true });
+
+const Performance = mongoose.model('Performance', performanceSchema);
+
 // Admin user schema for authentication
 const adminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -150,6 +164,9 @@ const initializeAdmin = async () => {
 app.get('/api/public', (req, res) => {
   res.json({ message: 'This is a public endpoint' });
 });
+
+// MEMBER ROUTES
+
 // Get all active members
 app.get('/api/members', async (req, res) => {
   console.log("request received");
@@ -166,6 +183,17 @@ app.get('/api/admin/members', authenticateToken, async (req, res) => {
   try {
     const members = await Member.find().sort({ order: 1, createdAt: 1 });
     res.json(members);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get a specific member by ID
+app.get('/api/admin/members/:id', authenticateToken, async (req, res) => {
+  try {
+    const member = await Member.findById(req.params.id);
+    if (!member) return res.status(404).json({ message: 'Member not found' });
+    res.json(member);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -233,6 +261,123 @@ app.delete('/api/admin/members/:id', authenticateToken, async (req, res) => {
     
     await Member.findByIdAndDelete(req.params.id);
     res.json({ message: 'Member deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PERFORMANCE ROUTES
+
+// Get all performances (separated by upcoming/previous based on date)
+app.get('/api/performances', async (req, res) => {
+  try {
+    const performances = await Performance.find({ active: true });
+    
+    // Sort and separate performances based on date
+    const currentDate = new Date();
+    
+    const upcomingPerformances = performances
+      .filter(perf => new Date(perf.date) >= currentDate)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const previousPerformances = performances
+      .filter(perf => new Date(perf.date) < currentDate)
+      .sort((a, b) => new Date(b.date) - new Date(a.date)); // Reverse chronological
+    
+    res.json({
+      upcoming: upcomingPerformances,
+      previous: previousPerformances
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin: Get all performances
+app.get('/api/admin/performances', authenticateToken, async (req, res) => {
+  try {
+    const performances = await Performance.find().sort({ date: -1 });
+    res.json(performances);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get a specific performance by ID
+app.get('/api/admin/performances/:id', authenticateToken, async (req, res) => {
+  try {
+    const performance = await Performance.findById(req.params.id);
+    if (!performance) return res.status(404).json({ message: 'Performance not found' });
+    res.json(performance);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Create new performance
+app.post('/api/admin/performances', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    const { title, date, venue, city, description, ticketLink } = req.body;
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'Image is required' });
+    }
+    
+    const newPerformance = new Performance({
+      title,
+      date,
+      venue,
+      city,
+      description,
+      ticketLink: ticketLink || '',
+      image: `/uploads/${req.file.filename}`
+    });
+    
+    const savedPerformance = await newPerformance.save();
+    res.status(201).json(savedPerformance);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Update performance
+app.put('/api/admin/performances/:id', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    const { title, date, venue, city, description, ticketLink, active } = req.body;
+    
+    // Get existing performance
+    const performance = await Performance.findById(req.params.id);
+    if (!performance) return res.status(404).json({ message: 'Performance not found' });
+    
+    // Update performance data
+    performance.title = title;
+    performance.date = date;
+    performance.venue = venue;
+    performance.city = city;
+    performance.description = description;
+    performance.ticketLink = ticketLink || '';
+    performance.active = active === 'true';
+    
+    // Update image if a new one was uploaded
+    if (req.file) {
+      performance.image = `/uploads/${req.file.filename}`;
+    }
+    
+    const updatedPerformance = await performance.save();
+    res.json(updatedPerformance);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Delete performance
+app.delete('/api/admin/performances/:id', authenticateToken, async (req, res) => {
+  try {
+    const performance = await Performance.findById(req.params.id);
+    if (!performance) return res.status(404).json({ message: 'Performance not found' });
+    
+    await Performance.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Performance deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
