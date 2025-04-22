@@ -16,21 +16,13 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   credentials: true
 };
-// app.use((req, res, next) => {
-//   res.header('Access-Control-Allow-Origin', '*');
-//   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  
-//   if (req.method === 'OPTIONS') {
-//     return res.sendStatus(200);
-//   }
-  
-//   next();
-// });
+
 app.use(cors(corsOptions));
 app.use('/uploads', express.static('uploads'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const emailRoutes = require('./emailRoutes');
+app.use('/api', emailRoutes);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -315,9 +307,10 @@ app.get('/api/admin/performances/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new performance
+// Create new performance - update in your index.js
 app.post('/api/admin/performances', authenticateToken, upload.single('image'), async (req, res) => {
   try {
-    const { title, date, venue, city, description, ticketLink } = req.body;
+    const { title, date, venue, city, description, ticketLink, active } = req.body;
     
     if (!req.file) {
       return res.status(400).json({ message: 'Image is required' });
@@ -330,7 +323,8 @@ app.post('/api/admin/performances', authenticateToken, upload.single('image'), a
       city,
       description,
       ticketLink: ticketLink || '',
-      image: `/uploads/${req.file.filename}`
+      image: `/uploads/${req.file.filename}`,
+      active: active === 'true'
     });
     
     const savedPerformance = await newPerformance.save();
