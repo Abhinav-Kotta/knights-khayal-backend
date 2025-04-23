@@ -22,7 +22,9 @@ app.use('/uploads', express.static('uploads'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const emailRoutes = require('./emailRoutes');
+const passwordResetRoutes = require('./passwordResetRoutes');
 app.use('/api', emailRoutes);
+app.use('/api', passwordResetRoutes);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -60,12 +62,9 @@ const performanceSchema = new mongoose.Schema({
 const Performance = mongoose.model('Performance', performanceSchema);
 
 // Admin user schema for authentication
-const adminSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-});
+const Admin = require('./models/Admin');
 
-const Admin = mongoose.model('Admin', adminSchema);
+module.exports.Admin = Admin;
 
 // Storage config for images
 const storage = multer.diskStorage({
@@ -145,7 +144,8 @@ const initializeAdmin = async () => {
       const hashedPassword = await bcrypt.hash(process.env.DEFAULT_ADMIN_PASSWORD || 'admin123', 10);
       await Admin.create({
         username: process.env.DEFAULT_ADMIN_USERNAME || 'admin',
-        password: hashedPassword
+        password: hashedPassword,
+        email: process.env.DEFAULT_ADMIN_EMAIL || 'admin@example.com' // Add default email
       });
       console.log('Default admin account created');
     }
@@ -153,9 +153,6 @@ const initializeAdmin = async () => {
     console.error('Error initializing admin account:', error);
   }
 };
-app.get('/api/public', (req, res) => {
-  res.json({ message: 'This is a public endpoint' });
-});
 
 // MEMBER ROUTES
 
