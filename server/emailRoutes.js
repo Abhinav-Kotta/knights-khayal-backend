@@ -242,7 +242,7 @@ router.post('/send-email', async (req, res) => {
               
               <div class="social-links">
                 <a href="https://facebook.com">Facebook</a> | 
-                <a href="https://instagram.com">Instagram</a> | 
+                <a href="https://www.instagram.com/knightskhayal/?hl=en">Instagram</a> | 
                 <a href="https://youtube.com">YouTube</a> | 
                 <a href="https://spotify.com">Spotify</a>
               </div>
