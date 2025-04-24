@@ -121,7 +121,7 @@ router.post('/send-email', async (req, res) => {
               </div>
             </div>
             <div class="email-footer">
-              <p>This message was sent from Knights Khayal.</p>
+              <p>This message was sent from ${sanitizedName}.</p>
             </div>
           </div>
         </body>
