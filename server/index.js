@@ -12,7 +12,7 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: 'http://localhost:5173', // Your frontend URL
+  origin: 'http://54.163.197.166:5173', // Your frontend URL
   optionsSuccessStatus: 200,
   credentials: true
 };
