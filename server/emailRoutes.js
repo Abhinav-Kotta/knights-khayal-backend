@@ -3,6 +3,8 @@ const { Resend } = require('resend');
 const router = express.Router();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+// Recipient email from environment variable with fallback
+const RECIPIENT_EMAIL = process.env.NOTIFICATION_EMAIL || 'contact@knightskhayal.com';
 
 router.post('/send-email', async (req, res) => {
   try {
@@ -257,8 +259,8 @@ router.post('/send-email', async (req, res) => {
     `;
     
     const { data: notificationData, error: notificationError } = await resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: 'abhinav.kotta@gmail.com',
+      from: 'contact@knightskhayal.com',
+      to: RECIPIENT_EMAIL,
       subject: `[Website Contact] ${sanitizedSubject}`,
       html: notificationHtml
     });
@@ -273,7 +275,7 @@ router.post('/send-email', async (req, res) => {
     
     // Confirmation email to the sender
     const { data: confirmationData, error: confirmationError } = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'contact@knightskhayal.com',
       to: email,
       subject: 'Thank you for contacting Knights Khayal',
       html: confirmationHtml
