@@ -4,9 +4,9 @@ const router = express.Router();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 // Recipient email from environment variable with fallback
-const RECIPIENT_EMAIL = process.env.NOTIFICATION_EMAIL || 'contact@knightskhayal.com';
+const RECIPIENT_EMAIL = process.env.NOTIFICATION_EMAIL || 'contact@kkhayal.com';
 // Sender email address - must be from a verified domain in Resend
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'contact@knightskhayal.com';
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'contact@kkhayal.com';
 // Are we in testing mode? (free tier only allows sending to your own email)
 const IS_TESTING = process.env.NODE_ENV !== 'production';
 // Your email for testing purposes
