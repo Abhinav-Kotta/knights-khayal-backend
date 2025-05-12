@@ -3,13 +3,8 @@ const { Resend } = require('resend');
 const router = express.Router();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-// Recipient email from environment variable with fallback
-const RECIPIENT_EMAIL = process.env.NOTIFICATION_EMAIL || 'contact@kkhayal.com';
-// Sender email address - must be from a verified domain in Resend
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'contact@kkhayal.com';
-// Are we in testing mode? (free tier only allows sending to your own email)
+// In testing mode, send all emails to your verified email
 const IS_TESTING = process.env.NODE_ENV !== 'production';
-// Your email for testing purposes
 const YOUR_EMAIL = 'abhinav.kotta@gmail.com';
 
 router.post('/send-email', async (req, res) => {
@@ -265,8 +260,8 @@ router.post('/send-email', async (req, res) => {
     `;
     
     const { data: notificationData, error: notificationError } = await resend.emails.send({
-      from: SENDER_EMAIL,
-      to: IS_TESTING ? YOUR_EMAIL : RECIPIENT_EMAIL,
+      from: 'contact@kkhayal.com',
+      to: IS_TESTING ? YOUR_EMAIL : YOUR_EMAIL, // Send to your email in both test and production
       subject: `[Website Contact] ${sanitizedSubject}`,
       html: notificationHtml
     });
@@ -281,8 +276,8 @@ router.post('/send-email', async (req, res) => {
     
     // Confirmation email to the sender
     const { data: confirmationData, error: confirmationError } = await resend.emails.send({
-      from: SENDER_EMAIL,
-      to: IS_TESTING ? YOUR_EMAIL : email, // In testing, send to your email; in production, send to the user
+      from: 'contact@kkhayal.com',
+      to: IS_TESTING ? YOUR_EMAIL : email, // In testing send to your email, in production send to the user
       subject: 'Thank you for contacting Knights Khayal',
       html: confirmationHtml
     });
